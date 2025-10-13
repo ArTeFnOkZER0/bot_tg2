@@ -1,25 +1,23 @@
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
 from aiogram import Router, F, Bot
 import asyncio
-import datetime
 from app.middleware import LoggingMiddleware
-from app import keyboards as kb
 from config import TOKEN
 import sqlite3
-
+from gpt4all import GPT4All
 
 conn = sqlite3.connect("users.db")
 cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    user_num TEXT,
-    trial BOOlEAN DEFAULT 1
+    user_ID BIGINT PRIMARY KEY,
+    trial BOOLEAN DEFAULT 1
 )
 """)
 
+model = GPT4All("mistral-7b-instruct-v0.1.Q4_0.gguf",
+                model_path="C:/Users/archi/gpt4all/models")
 
 bot = Bot(token=TOKEN)
 
@@ -30,41 +28,41 @@ router.message.middleware(LoggingMiddleware())
 
 @router.message(CommandStart())
 async def start_cmd(message: Message):
-    await message.answer("Привет, зарегестрируйтеесь пожалуйста.", reply_markup=kb.reg)
+    await message.answer("Привет, я крутой бот.")
+    a = message.from_user.id
+    cursor.execute("SELECT trial FROM users WHERE user_ID = ?", (a,))
+    result = cursor.fetchone()
+    if result is None:
+        cursor.execute("INSERT INTO users (user_ID) VALUES (?)", (a,))
+        conn.commit()
+        await message.answer("Пробный период — 3 дня ⏳.")
+        await asyncio.create_task(trial_timer(message.chat.id, a))
+    elif result[0] == 1:
+        await message.answer("⚠️ Пробный период ещё идёт.")
+    else:
+        await message.answer("❌ Пробный период уже закончился.")
+    conn.commit()
 
 
 @router.message(Command("check"))
 async def check_trial(message: Message):
-    await is_trial_over()
-    await message.answer("")
-
-
-@router.callback_query(F.data == "num")
-async def ask_contact(callback: CallbackQuery):
-    await callback.answer()
-    await callback.message.answer(
-        "Пожалуйста, поделись своим номером телефона:", reply_markup=kb.contact_keyboard
-    )
-
-
-async def trial_timer(chat_id, user_number):
-    await asyncio.sleep(3)
-    await bot.send_message(chat_id=chat_id, text="Пробный период капут")
-    cursor.execute("UPDATE users SET trial = 0 WHERE user_num = ?", (user_number,))
-    conn.commit()
-
-
-async def is_trial_over(user_number):
-    cursor.execute("SELECT trial FROM users WHERE user_num = ?", (user_number,))
+    cursor.execute("SELECT trial FROM users WHERE user_ID = ?", (message.from_user.id,))
     result = cursor.fetchone()
-    if result:
-        return True
-    return False
+    if result[0] == 1:
+        await message.answer("⚠️ Пробный период ещё идёт.")
+    else:
+        await message.answer("❌ Пробный период уже закончился.")
 
 
-@router.message(F.contact)
-async def get_num(message: Message):
-    a = message.contact.phone_number
-    cursor.execute("INSERT OR IGNORE INTO users (user_num) VALUES (?)", (a,))
+async def trial_timer(chat_id, user_id):
+    await asyncio.sleep(10)
+    await bot.send_message(chat_id=chat_id, text="❌ Пробный период закончился.")
+    cursor.execute("UPDATE users SET trial = 0 WHERE user_ID = ?", (user_id,))
     conn.commit()
-    await trial_timer(message.chat.id, a)
+
+
+@router.message(F.text)
+async def smth(message: Message):
+    a = message.text
+    response = await asyncio.to_thread(model.generate, f"Придумай сказку о {a}. Она должна быть не больше 200 токенов. Не озвучивай свои мысли.", max_tokens=999)
+    await message.answer(response)
