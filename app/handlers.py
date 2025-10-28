@@ -8,9 +8,12 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, BufferedInputFile
 from app import keyboards as kb
 from app.middleware import LoggingMiddleware
-from config import TOKEN, client
+# from config import TOKEN, client
+import os
 import pollinations
 
+
+API_KEY = os.getenv("API_KEY")
 conn = sqlite3.connect("users.db")
 cursor = conn.cursor()
 cursor.execute("""
