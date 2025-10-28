@@ -1,11 +1,12 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
-reg = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Отправить номер", callback_data="num")]
+sex = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Мужской", callback_data="M"),
+                                             InlineKeyboardButton(text="Женский", callback_data="W")]
                                             ])
-contact_keyboard = ReplyKeyboardMarkup(
+
+main_func_start = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="📱 Отправить мой номер", request_contact=True)]
+        [KeyboardButton(text="Дать совет"), KeyboardButton(text="Генерация картинки")]
     ],
-    resize_keyboard=True,
-    one_time_keyboard=True
+    resize_keyboard=True
 )
