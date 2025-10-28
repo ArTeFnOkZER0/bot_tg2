@@ -37,7 +37,7 @@ class GenState(StatesGroup):
     prompt = State()
 
 
-bot = Bot(token=TOKEN)
+bot = Bot(token=API_KEY)
 
 
 router = Router()
