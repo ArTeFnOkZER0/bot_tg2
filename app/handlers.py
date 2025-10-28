@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
     trial BOOLEAN DEFAULT 1
 )
 """)
-
+asd
 client = genai.Client(api_key=google_api)
 
 image_gen = pollinations.Image(nologo=True, width=1920, height=1080, enhance=True)
