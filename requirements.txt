@@ -1,0 +1,3 @@
+pollinations~=4.5.1
+aiogram~=3.22.0
+google~=3.0.0
