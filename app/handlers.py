@@ -11,9 +11,13 @@ from app.middleware import LoggingMiddleware
 # from config import TOKEN, client
 import os
 import pollinations
+from google import genai
 
 
 API_KEY = os.getenv("API_KEY")
+
+google_api = os.getenv("client")
+
 conn = sqlite3.connect("users.db")
 cursor = conn.cursor()
 cursor.execute("""
@@ -23,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 
+client = genai.Client(api_key=google_api)
 
 image_gen = pollinations.Image(nologo=True, width=1920, height=1080, enhance=True)
 
@@ -37,7 +42,7 @@ class GenState(StatesGroup):
     prompt = State()
 
 
-bot = Bot(token=API_KEY)
+bot = Bot(token=API_KEY)  # TOKEN
 
 
 router = Router()
